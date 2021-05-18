@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <cstring>
 #include <fstream>
 
 using namespace std;
@@ -45,30 +46,55 @@ int recursiveMainLoop(bool original, vector<uint8_t> &input_bytes, vector<uint8_
     {
 
         curr_byte = bytes.at(bytes_index);
-        cout << curr_byte;
+        cout << curr_byte << endl;
+        for (auto &i : tape)
+        {
+            if (i > 9)
+                cout << i << " ";
+            else
+                cout << +i << " ";
+            // if (i != 0)
+            //     cout << i << " |";
+            // else
+            //     cout << "  |";
+        }
+        cout << endl;
+        for (int i = 0; i < tape.size(); i++)
+        {
+            if (i == ptr)
+            {
+                cout << "^";
+            }
+            else
+            {
+                cout << "  ";
+            }
+            // cout << "x";
+        }
+        cout << endl;
         switch (curr_byte)
         {
         case '+':
-            cout << "inc  ";
+            // cout << "inc  ";
             // makeTapeRoom(tape, ptr);
             handleINC(tape, ptr);
             break;
         case '-':
-            cout << "dec  \n";
+            // cout << "dec  ";
             // makeTapeRoom(tape, ptr);
             handleDEC(tape, ptr);
             break;
         case '.':
-            cout << "prn ";
-            cout << tape.at(ptr) << endl;
+            // cout << "prn ";
+            // cout << tape.at(ptr) << endl;
             output_file << tape.at(ptr); // prints int instead of char
             break;
         case ',':
-            cout << "inp ";
+            // cout << "inp ";
             if (!isInputRoom(input_bytes, input_ptr))
                 exit(-1);
             tape.at(ptr) = input_bytes.at(input_ptr++);
-            cout << tape.at(ptr) << endl;
+            // cout << tape.at(ptr) << endl;
             break;
         case '<':
             ptr--;
@@ -80,8 +106,8 @@ int recursiveMainLoop(bool original, vector<uint8_t> &input_bytes, vector<uint8_
         case '[':
             if (tape.at(ptr) == 0)
             {
-                cout << "---------loop bypassed" << endl;
-
+                // cout << "---------loop bypassed" << endl;
+                // i think i don't need lookahead anymore
                 loop_lookahead_index = 1;
                 for (std::vector<uint8_t>::const_iterator it = bytes.begin() + bytes_index; it != bytes.end(); it++)
                 {
@@ -97,12 +123,12 @@ int recursiveMainLoop(bool original, vector<uint8_t> &input_bytes, vector<uint8_
             { // enter loop
                 if (loop_start_index != -1)
                 { // fun times begin
-                    cout << "recursive loop start" << endl;
+                    // cout << "recursive loop start" << endl;
                     recursiveMainLoop(0, input_bytes, bytes, tape, ptr, byte, input_file, output_file, input_ptr, loop_lookahead_index, curr_byte, ++bytes_index);
                 }
                 else
                 {
-                    cout << "---------loop start" << endl;
+                    // cout << "---------loop start" << endl;
                     loop_start_index = bytes_index;
                 }
             }
@@ -110,7 +136,7 @@ int recursiveMainLoop(bool original, vector<uint8_t> &input_bytes, vector<uint8_
         case ']':
             if (tape.at(ptr) == 0)
             { // we exit the loop
-                cout << "---------loop end" << endl;
+                // cout << "---------loop end" << endl;
 
                 if (original)
                 {
@@ -123,7 +149,7 @@ int recursiveMainLoop(bool original, vector<uint8_t> &input_bytes, vector<uint8_
             }
             else
             { // back to the loop start
-                cout << "-----back to loop start" << endl;
+                // cout << "-----back to loop start" << endl;
                 // when we get here loop start index is 255 for some reason??
                 bytes_index = loop_start_index;
             }
@@ -135,15 +161,38 @@ int recursiveMainLoop(bool original, vector<uint8_t> &input_bytes, vector<uint8_
     return 1;
 }
 ////////////////////////////////////////////////////////////////
-int main()
+int main(int argc, char *argv[])
 {
-    string filename("source.b");
-    string outfilename("test.txt");
-    // cin >> filename; // source and output file names will be cli parameters (TODO)
+    string filename("source");
+    string outfilename("output");
+    if (argc > 1)
+    {
+        filename = argv[1];
+    }
+    if (argc > 2)
+    {
+        outfilename = argv[2];
+    }
+    filename += ".b";
+    outfilename += ".txt";
     vector<uint8_t>
-        input_bytes, bytes, tape{0, 0, 0, 0, 0};
+        input_bytes,
+        bytes, tape{0, 0, 0, 0, 0};
     uint ptr = 0;  // index of head on tape
     char byte = 0; // current instruction
+    if (argc > 4)
+    {
+        if (argv[4] == "-v")
+            cout << "(v)erbose tape printing on" << endl;
+        //TODO enable verbose printing of tape
+    }
+    if (argc > 3)
+    {
+        for (int i = 0; i < strlen(argv[3]); i++)
+        {
+            input_bytes.push_back(argv[3][i]);
+        }
+    }
 
     ifstream input_file(filename);
     if (!input_file.is_open())
@@ -157,7 +206,9 @@ int main()
     // output_file.open("example.txt");
     if (!output_file.is_open())
     {
-        cout << "error";
+        cerr << "Could not open the file - '"
+             << outfilename << "'" << endl;
+        return -1;
     }
     // const vector<uint8_t> &retVal = tape;
     bool input_flag = false;
@@ -165,7 +216,7 @@ int main()
     {
         if (byte == '!')
         {
-            cout << "input section of bf program reached\n";
+            // cout << "input section of bf program reached\n";
             input_flag = true;
             continue;
         }
