@@ -3,12 +3,17 @@
 #include <string>
 #include <cstring>
 #include <fstream>
+#include <algorithm> // std::find
 
 using namespace std;
 /** takes brainfuck program as input, outputs the output of that program
  * maybe-TODO: compile bf into cpp
  * TODO: more tests
  */
+
+//globals//////
+bool verbose = false;
+///////////////
 void handleINC(vector<uint8_t> &tape, uint &ptr);
 void handleINC(vector<uint8_t> &tape, uint &ptr)
 {
@@ -46,32 +51,35 @@ int recursiveMainLoop(bool original, vector<uint8_t> &input_bytes, vector<uint8_
     {
 
         curr_byte = bytes.at(bytes_index);
-        cout << curr_byte << endl;
-        for (auto &i : tape)
+        if (verbose)
         {
-            if (i > 9)
-                cout << i << " ";
-            else
-                cout << +i << " ";
-            // if (i != 0)
-            //     cout << i << " |";
-            // else
-            //     cout << "  |";
-        }
-        cout << endl;
-        for (int i = 0; i < tape.size(); i++)
-        {
-            if (i == ptr)
+            cout << curr_byte << endl;
+            for (auto &i : tape)
             {
-                cout << "^";
+                if (i > 9)
+                    cout << i << " ";
+                else
+                    cout << +i << " ";
+                // if (i != 0)
+                //     cout << i << " |";
+                // else
+                //     cout << "  |";
             }
-            else
+            cout << endl;
+            for (int i = 0; i < tape.size(); i++)
             {
-                cout << "  ";
+                if (i == ptr)
+                {
+                    cout << "^";
+                }
+                else
+                {
+                    cout << "  ";
+                }
+                // cout << "x";
             }
-            // cout << "x";
+            cout << endl;
         }
-        cout << endl;
         switch (curr_byte)
         {
         case '+':
@@ -165,27 +173,75 @@ int main(int argc, char *argv[])
 {
     string filename("source");
     string outfilename("output");
-    if (argc > 1)
+
+    // using std::find with vector and iterator:
+    std::vector<string> myvector(argv, argv + argc);
+    std::vector<string>::iterator it;
+
+    it = find(myvector.begin(), myvector.end(), "-h");
+    if (it != myvector.end())
     {
-        filename = argv[1];
+        myvector.erase(it);
+        cout << "./brainfuck[source][-o output][-v][-h | --help] " << endl;
+        verbose = true;
+        return 1;
+        // std::cout
+        //     << "Element found in myvector: " << *it << '\n';
     }
-    if (argc > 2)
+    else
     {
-        outfilename = argv[2];
+        it = find(myvector.begin(), myvector.end(), "--help");
+        if (it != myvector.end())
+        {
+            myvector.erase(it);
+            cout << "./brainfuck [source] [-o output] [-v] [-h | --help] " << endl;
+            verbose = true;
+            return 1;
+            // std::cout
+            //     << "Element found in myvector: " << *it << '\n';
+        }
     }
+    it = find(myvector.begin(), myvector.end(), "-v");
+    if (it != myvector.end())
+    {
+        myvector.erase(it);
+        cout << "(v)erbose tape printing on" << endl;
+        verbose = true;
+        // std::cout
+        //     << "Element found in myvector: " << *it << '\n';
+    }
+    it = find(myvector.begin(), myvector.end(), "-o");
+    if (it != myvector.end())
+    {
+        myvector.erase(it); // erase -o
+        cout << "(o)utput filename: " << *it << endl;
+
+        outfilename = *it;
+        outfilename += ".txt";
+        myvector.erase(it); // erase outfilename
+    }
+    else
+    {
+        if (verbose)
+        {
+            cout << "no output filename specified, using default: output.txt" << endl;
+        }
+    }
+    if (myvector.size() == 1)
+    {
+        cerr << "specify source filename" << endl;
+        return -1;
+    }
+
+    filename = myvector.at(1); // last thing left after we parse flags is the source file
     filename += ".b";
-    outfilename += ".txt";
+
     vector<uint8_t>
         input_bytes,
         bytes, tape{0, 0, 0, 0, 0};
     uint ptr = 0;  // index of head on tape
     char byte = 0; // current instruction
-    if (argc > 4)
-    {
-        if (argv[4] == "-v")
-            cout << "(v)erbose tape printing on" << endl;
-        //TODO enable verbose printing of tape
-    }
+
     if (argc > 3)
     {
         for (int i = 0; i < strlen(argv[3]); i++)

@@ -11,5 +11,5 @@ compile in vscode or with g++
 then call interpreter on your .b file (omit extensions, parameters optional):
 
 ```
-./brainfuck [source] [output] [-v]
+./brainfuck [source] [-o output] [-v] [-h|--help]
 ```
