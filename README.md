@@ -1,6 +1,6 @@
 # brainfuck-interpreter
 
-quick and dirty recursive bf interpreter :)
+quick and dirty recursive [bf](https://en.wikipedia.org/wiki/Brainfuck) interpreter :)
 
 compile in vscode or with g++
 
